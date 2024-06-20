@@ -8,39 +8,61 @@
 import UIKit
 import TinyConstraints
 
-class PreviewViewController: UIViewController {
+final class PreviewViewController: UIViewController {
     
-    static var launchesURL = "https://api.spacexdata.com/v4/launches"
-    static var rocketsURL = "https://api.spacexdata.com/v4/rockets"
+    private var launchesURL = "https://api.spacexdata.com/v4/launches"
+    private var rocketsURL = "https://api.spacexdata.com/v4/rockets"
     
-    private let scrollView = UIScrollView()
-    private let pageControll = UIPageControl(frame: CGRectMake(50, 300, 200, 20))
-
+    private var rockets: [Rocket] = []
+    private var launchModel: Launch?
+    private var pageControllRockets = [RocketInfoViewController]()
+    
+    private let pageControll = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal)
+    private let pageViewContainer = UIView()
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadRocketInfo()
         setupUI()
     }
-
 
 }
 
 extension PreviewViewController {
     
     func setupUI() {
-        scrollView.delegate = self
-        pageControll.currentPage = 0
-        pageControll.numberOfPages = 5 /* здезь поставить колличество страниц исходя из колличесва ракет из полученного массива */
-        pageControll.currentPageIndicatorTintColor = .white
-        pageControll.pageIndicatorTintColor = .lightGray
+        let startImageView = UIImageView(image: UIImage(resource: .prepareStart))
+        startImageView.size(CGSize(width: view.frame.width, height: view.frame.height))
+        startImageView.contentMode = .scaleToFill        
         
-        view.addSubview(scrollView)
-        view.addSubview(pageControll)
+        view.insertSubview(startImageView, at: 0)
+        view.addSubview(pageViewContainer)
+        pageViewContainer.addSubview(pageControll.view)
         
-        scrollView.edgesToSuperview()
-        pageControll.edgesToSuperview(excluding: .top, insets: .bottom(50))
+        pageViewContainer.edgesToSuperview(insets: .top(view.frame.height * 0.4))
+        pageControll.view.edgesToSuperview()
+    }
+    
+    func loadRocketInfo() {
+        guard let url = URL(string: rocketsURL) else { return }
+        URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
+            guard let data else {
+                print("Error: failure data from hourly response")
+                return
+            }
+            DispatchQueue.main.async {
+                do {
+                    let jsonData = try JSONDecoder().decode([Rocket].self, from: data)
+                    self?.rockets = jsonData
+                    self?.rockets.forEach { rocket in
+                        self?.pageControllRockets.append(RocketInfoViewController(rocket: rocket))
+                    }
+                } catch let error {
+                    print("Error decoding hourly weather JSON: \(error)")
+                }
+            }
+        }
+        .resume()
     }
 }
 
-extension PreviewViewController: UIScrollViewDelegate {
-    
-}
+
