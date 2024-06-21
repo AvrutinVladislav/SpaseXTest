@@ -10,11 +10,14 @@ import TinyConstraints
 
 final class RocketInfoViewController: UIViewController {
     
+    private let launchesURL = "https://api.spacexdata.com/v4/launches"
+    private var launchList: [Launch] = []
+    private var rocket: Rocket
+    
     private let containerView = UIView()
     private let scrollView = UIScrollView()
     private let contentTitleLabel = UILabel()
     private let settingsButton = UIButton()
-//    private let rocketInfoCollectionView = UICollectionView()
     private let firstStartValueLabel = CustomLabel()
     private let firstStartCountryValueLabel = CustomLabel()
     private let startCostValueLabel = CustomLabel()
@@ -28,10 +31,13 @@ final class RocketInfoViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadLaunchList()
         setupUI()
+        configure(model: rocket)
     }
     
     init(rocket: Rocket) {
+        self.rocket = rocket
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -39,19 +45,6 @@ final class RocketInfoViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func fill(model: Rocket?) {
-        guard let model = model else { return }
-        contentTitleLabel.text = model.name
-        firstStartValueLabel.text = model.firstFlight
-        firstStartCountryValueLabel.text = model.country
-        startCostValueLabel.text = "\(model.firstStage?.engines ?? 0)"
-        firstStageNumberOfEnginesValueLabel.text = "\(model.firstStage?.engines ?? 0)"
-        firstStageAmountOfFuelValueLabel.text = "\(model.firstStage?.fuelAmountTons ?? 0)" + " ton"
-        firstStageCombustionTimeValueLabel.text = "\( model.firstStage?.burnTimeSec ?? 0)" + " sec"
-        secondStageNumberOfEnginesValueLabel.text = String(describing: model.secondStage?.engines)
-        secondStageAmountOfFuelValueLabel.text = "\(model.secondStage?.fuelAmountTons ?? 0)" + " ton"
-        secondStageCombustionTimeValueLabel.text = "\(model.secondStage?.burnTimeSec ?? 0)" + " sec"
-    }
 }
 
 private extension RocketInfoViewController {
@@ -69,10 +62,18 @@ private extension RocketInfoViewController {
         let firstStageCombustionTimeLabel = CustomLabel()
         let secondStageCombustionTimeLabel = CustomLabel()
         let scrollContainer = UIView()
+        let layout: UICollectionViewFlowLayout = {
+            let layout = UICollectionViewFlowLayout()
+            layout.scrollDirection = .horizontal
+            layout.sectionInset = .zero
+            layout.minimumInteritemSpacing = 40
+            layout.minimumLineSpacing = 12
+            return layout
+        }()
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         
         containerView.backgroundColor = .black
         
-        contentTitleLabel.text = "Falcon Heavy"
         contentTitleLabel.textColor = .white
         contentTitleLabel.font = .systemFont(ofSize: 25, weight: .medium)
         contentTitleLabel.height(35)
@@ -104,15 +105,23 @@ private extension RocketInfoViewController {
         viewStartsListButton.setTitleColor(.black, for: .normal)
         viewStartsListButton.backgroundColor = .white
         viewStartsListButton.layer.cornerRadius = 10
+        viewStartsListButton.addTarget(self, action: #selector(watchLaunchListButtonDidTap), for: .touchUpInside)
         
-//        rocketInfoCollectionView.dataSource = self
-//        rocketInfoCollectionView.register(ShortInfoCollectionViewCell.self,
-//                                          forCellWithReuseIdentifier: ShortInfoCollectionViewCell.identifier)
+        scrollContainer.size(CGSize(width: containerView.frame.width, height: 1000))
+        scrollView.showsVerticalScrollIndicator = false
+        
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.register(ShortInfoCollectionViewCell.self,
+                                          forCellWithReuseIdentifier: ShortInfoCollectionViewCell.identifier)
+        collectionView.height(80)
+        collectionView.backgroundColor = .black
+        
         
         view.addSubview(containerView)
         containerView.addSubview(contentTitleLabel)
         containerView.addSubview(settingsButton)
-//        containerView.addSubview(rocketInfoCollectionView)
+        containerView.addSubview(collectionView)
         containerView.addSubview(scrollView)
         scrollView.addSubview(scrollContainer)
         scrollContainer.addSubview(firstStartLabel)
@@ -142,15 +151,21 @@ private extension RocketInfoViewController {
         contentTitleLabel.leadingToSuperview(offset: 30)
         settingsButton.topToSuperview(offset: 50)
         settingsButton.trailingToSuperview(offset: 30)
-        scrollView.topToBottom(of: contentTitleLabel, offset: 20)
+        
+        collectionView.topToBottom(of: contentTitleLabel, offset: 20)
+        collectionView.horizontalToSuperview(insets: .horizontal(30))
+        
+        scrollView.topToBottom(of: collectionView, offset: 20)
         scrollView.edgesToSuperview(excluding: .top, insets: .init(top: 0, left: 30, bottom: 10, right: 30))
-        scrollView.height(to: scrollContainer)
         scrollView.width(to: scrollContainer)
+        
         scrollContainer.edgesToSuperview()
+        
         firstStartLabel.topToSuperview(offset: 10)
         firstStartLabel.leadingToSuperview()
         firstStartValueLabel.topToSuperview(offset: 10)
         firstStartValueLabel.trailingToSuperview()
+        
         firstStartCountryLabel.topToBottom(of: firstStartLabel, offset: 10)
         firstStartCountryLabel.leadingToSuperview()
         firstStartCountryValueLabel.topToBottom(of: firstStartValueLabel, offset: 10)
@@ -200,22 +215,91 @@ private extension RocketInfoViewController {
         viewStartsListButton.topToBottom(of: secondStageCombustionTimeLabel, offset: 35)
         viewStartsListButton.horizontalToSuperview()
         viewStartsListButton.centerXToSuperview()
-
     }
     
+    func configure(model: Rocket) {
+        contentTitleLabel.text = model.name
+        firstStartValueLabel.text = model.firstFlight
+        firstStartCountryValueLabel.text = model.country
+        startCostValueLabel.text = "$\((model.costPerLaunch ?? 0) / 1000000) млн"
+        firstStageNumberOfEnginesValueLabel.text = "\(model.firstStage?.engines ?? 0)"
+        firstStageAmountOfFuelValueLabel.text = "\(model.firstStage?.fuelAmountTons ?? 0)" + " тонн"
+        firstStageCombustionTimeValueLabel.text = "\( model.firstStage?.burnTimeSec ?? 0)" + " сек"
+        secondStageNumberOfEnginesValueLabel.text = "\(model.secondStage?.engines ?? 0)"
+        secondStageAmountOfFuelValueLabel.text = "\(model.secondStage?.fuelAmountTons ?? 0)" + " тонн"
+        secondStageCombustionTimeValueLabel.text = "\(model.secondStage?.burnTimeSec ?? 0)" + " сек"
+    }
+    
+    func loadLaunchList() {
+        guard let url = URL(string: launchesURL) else { return }
+        URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
+            guard let data else {
+                print("Error: failure data launch info response")
+                return
+            }
+            DispatchQueue.main.async {
+                do {
+                    self?.launchList = try JSONDecoder().decode([Launch].self, from: data)
+                } catch let error {
+                    print("Error decoding launch info JSON: \(error)")
+                }
+            }
+        }
+        .resume()
+    }
+    
+    func formatString(_ string: String) -> String {
+        let pattern = "(\\d)(?=(\\d{3})+(?!\\d))"
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+            let range = NSRange(location: 0, length: string.count)
+            let formattedNumber = regex.stringByReplacingMatches(in: string, options: [], range: range, withTemplate: "$1,")
+            return formattedNumber
+        }
+        return string
+    }
+    
+    @objc func watchLaunchListButtonDidTap() {
+        navigationController?.pushViewController(LaunchListViewController(launchList: launchList), animated: false)
+    }
 }
 
+// MARK: - UICollectionViewDataSource
 extension RocketInfoViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 4
+        return Titles.allCases.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ShortInfoCollectionViewCell.identifier,
-                                                            for: indexPath) as? ShortInfoCollectionViewCell
+                                                            for: indexPath) as? ShortInfoCollectionViewCell,
+              let title = Titles.getTitle(at: indexPath.row)
         else { return UICollectionViewCell()}
-        
-        
+        switch title {
+        case .height:
+            cell.fill(title: title.title, value: "\(rocket.height?.meters?.description ?? "") м")
+        case .diameter:
+            cell.fill(title: title.title, value: "\(rocket.diameter?.meters?.description ?? "") м")
+        case .mass:
+            cell.fill(title: title.title, value: formatString(rocket.mass?.kg?.description ?? "") + " кг")
+        case .payloadWeights:
+            cell.fill(title: title.title, value: formatString(rocket.payloadWeights?[0].kg?.description ?? "") + " кг")
+        }
         return cell
     }
 }
+
+// MARK: - UICollectionViewDelegateFlowLayout
+extension RocketInfoViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 100, height: 80) // Размер ячейки
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 10 // Отступы между строками
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 10 // Отступы между элементами в строке
+    }
+}
+

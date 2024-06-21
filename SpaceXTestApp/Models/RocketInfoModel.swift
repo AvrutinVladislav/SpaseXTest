@@ -155,3 +155,30 @@ struct PayloadWeight: Codable {
     let kg: Int?
     let lb: Int?
 }
+
+enum Titles: Codable, CaseIterable {
+    case height
+    case diameter
+    case mass
+    case payloadWeights
+    
+    var title: String {
+        switch self {
+        case .height:
+            return "Высота"
+        case .diameter:
+            return "Диаметр"
+        case .mass:
+            return "Масса"
+        case .payloadWeights:
+            return "Нагрузка"
+        }
+    }
+    
+    static func getTitle(at index: Int) -> Titles? {
+        guard index < Titles.allCases.count else {
+            fatalError("Index out of range")
+        }
+        return Titles.allCases.indices.contains(index) ? Titles.allCases[index] : nil
+    }
+}
