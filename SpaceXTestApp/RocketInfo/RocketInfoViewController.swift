@@ -107,7 +107,6 @@ private extension RocketInfoViewController {
         viewStartsListButton.layer.cornerRadius = 10
         viewStartsListButton.addTarget(self, action: #selector(watchLaunchListButtonDidTap), for: .touchUpInside)
         
-        scrollContainer.size(CGSize(width: containerView.frame.width, height: 1000))
         scrollView.showsVerticalScrollIndicator = false
         
         collectionView.dataSource = self
@@ -215,6 +214,7 @@ private extension RocketInfoViewController {
         viewStartsListButton.topToBottom(of: secondStageCombustionTimeLabel, offset: 35)
         viewStartsListButton.horizontalToSuperview()
         viewStartsListButton.centerXToSuperview()
+        viewStartsListButton.bottomToSuperview(offset: -10)
     }
     
     func configure(model: Rocket) {

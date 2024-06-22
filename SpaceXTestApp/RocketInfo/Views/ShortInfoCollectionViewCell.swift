@@ -33,12 +33,14 @@ final class ShortInfoCollectionViewCell: UICollectionViewCell {
 private extension ShortInfoCollectionViewCell {
     
     func setupUI() {
-        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
         contentView.backgroundColor = .launchListBackground
         contentView.layer.cornerRadius = 15
         
-        addSubview(titleLabel)
-        addSubview(valueLabel)
+        addSubview(stackView)
+        stackView.addArrangedSubview(titleLabel)
+        stackView.addArrangedSubview(valueLabel)
         
         for label in [titleLabel, valueLabel] {
             label.font = .systemFont(ofSize: 14, weight: .regular)
@@ -46,8 +48,7 @@ private extension ShortInfoCollectionViewCell {
             label.textAlignment = .center
         }
         
-        valueLabel.edgesToSuperview(excluding: .bottom, insets: .init(top: 15, left: 10, bottom: 0, right: 10))
-        titleLabel.topToBottom(of: valueLabel, offset: 5)
-        titleLabel.edgesToSuperview(excluding: .top, insets: .init(top: 0, left: 10, bottom: 15, right: 10))
+        stackView.centerInSuperview()
+        
     }
 }
