@@ -9,10 +9,17 @@ import Foundation
 import UIKit
 import TinyConstraints
 
-final class LaunchListViewController: UIViewController {
+final class LaunchListViewController: CustomViewController {
     
     private let tableView = UITableView()
     private var launchList: [Launch] = []
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        setupNavigationBar()
+        setupUI()
+    }
     
     init(launchList: [Launch]) {
         super.init(nibName: nil, bundle: nil)
@@ -23,12 +30,6 @@ final class LaunchListViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        setupNavigationBar()
-        setupUI()
-    }
 }
 
 extension LaunchListViewController {
@@ -45,9 +46,13 @@ extension LaunchListViewController {
     }
     
     func setupNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .black
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
         self.title = "Список запусков"
-        navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
-        navigationController?.navigationBar.backgroundColor = .black
         let button = UIButton()
         button.setImage(UIImage(systemName: "chevron.backward"), for: .normal)
         button.setTitle("Назад", for: .normal)

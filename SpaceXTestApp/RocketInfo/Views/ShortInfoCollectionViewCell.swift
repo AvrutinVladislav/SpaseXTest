@@ -10,8 +10,8 @@ import TinyConstraints
 
 final class ShortInfoCollectionViewCell: UICollectionViewCell {
     
-    private let titleLabel = UILabel()
-    private let valueLabel = UILabel()
+    private let titleLabel = CustomLabel()
+    private let valueLabel = CustomLabel()
     
     static let identifier = "infoCell"
     
@@ -41,13 +41,7 @@ private extension ShortInfoCollectionViewCell {
         addSubview(stackView)
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(valueLabel)
-        
-        for label in [titleLabel, valueLabel] {
-            label.font = .systemFont(ofSize: 14, weight: .regular)
-            label.textColor = .white
-            label.textAlignment = .center
-        }
-        
+    
         stackView.centerInSuperview()
         
     }

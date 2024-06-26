@@ -22,6 +22,6 @@ final class CustomLabel: UILabel {
 extension CustomLabel {
     func setupLabel() {
         self.textColor = .white
-        self.font = .systemFont(ofSize: 11, weight: .regular)
+        self.font = .systemFont(ofSize: 14, weight: .regular)
     }
 }

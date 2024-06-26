@@ -45,6 +45,7 @@ extension PreviewViewController {
         view.addSubview(pageViewContainer)
         pageViewContainer.addSubview(pageVC.view)
         
+        startImageView.edgesToSuperview()
         pageViewContainer.edgesToSuperview(insets: .top(view.frame.height * 0.4))
         pageVC.view.edgesToSuperview()
         pageVC.didMove(toParent: self)

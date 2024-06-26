@@ -13,6 +13,10 @@ final class RocketInfoViewController: UIViewController {
     private let launchesURL = "https://api.spacexdata.com/v4/launches"
     private var launchList: [Launch] = []
     private var rocket: Rocket
+    private var heightInMetricSystem = true
+    private var diameterInMetricSystem = true
+    private var massInMetricSystem = true
+    private var payloadWeightsInMetricSystem = true
     
     private let containerView = UIView()
     private let scrollView = UIScrollView()
@@ -28,12 +32,26 @@ final class RocketInfoViewController: UIViewController {
     private let secondStageAmountOfFuelValueLabel = CustomLabel()
     private let secondStageCombustionTimeValueLabel = CustomLabel()
     private let viewStartsListButton = UIButton()
+    private let layout: UICollectionViewFlowLayout = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.sectionInset = .zero
+        layout.minimumInteritemSpacing = 40
+        layout.minimumLineSpacing = 12
+        return layout
+    }()
+    private lazy var shortInfoCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     
     override func viewDidLoad() {
         super.viewDidLoad()
         loadLaunchList()
         setupUI()
         configure(model: rocket)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
     init(rocket: Rocket) {
@@ -62,15 +80,6 @@ private extension RocketInfoViewController {
         let firstStageCombustionTimeLabel = CustomLabel()
         let secondStageCombustionTimeLabel = CustomLabel()
         let scrollContainer = UIView()
-        let layout: UICollectionViewFlowLayout = {
-            let layout = UICollectionViewFlowLayout()
-            layout.scrollDirection = .horizontal
-            layout.sectionInset = .zero
-            layout.minimumInteritemSpacing = 40
-            layout.minimumLineSpacing = 12
-            return layout
-        }()
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         
         containerView.backgroundColor = .black
         
@@ -81,6 +90,7 @@ private extension RocketInfoViewController {
         settingsButton.setImage(UIImage(systemName: "gearshape"), for: .normal)
         settingsButton.tintColor = .white
         settingsButton.size(CGSize(width: 35, height: 35))
+        settingsButton.addTarget(self, action: #selector(settingsButtonDidTap), for: .touchUpInside)
         
         firstStartLabel.text = "Превый запуск"
         firstStartCountryLabel.text = "Страна"
@@ -109,18 +119,18 @@ private extension RocketInfoViewController {
         
         scrollView.showsVerticalScrollIndicator = false
         
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        collectionView.register(ShortInfoCollectionViewCell.self,
+        shortInfoCollectionView.dataSource = self
+        shortInfoCollectionView.delegate = self
+        shortInfoCollectionView.register(ShortInfoCollectionViewCell.self,
                                           forCellWithReuseIdentifier: ShortInfoCollectionViewCell.identifier)
-        collectionView.height(80)
-        collectionView.backgroundColor = .black
-        
+        shortInfoCollectionView.height(80)
+        shortInfoCollectionView.backgroundColor = .black
+        shortInfoCollectionView.showsHorizontalScrollIndicator = false
         
         view.addSubview(containerView)
         containerView.addSubview(contentTitleLabel)
         containerView.addSubview(settingsButton)
-        containerView.addSubview(collectionView)
+        containerView.addSubview(shortInfoCollectionView)
         containerView.addSubview(scrollView)
         scrollView.addSubview(scrollContainer)
         scrollContainer.addSubview(firstStartLabel)
@@ -151,10 +161,10 @@ private extension RocketInfoViewController {
         settingsButton.topToSuperview(offset: 50)
         settingsButton.trailingToSuperview(offset: 30)
         
-        collectionView.topToBottom(of: contentTitleLabel, offset: 20)
-        collectionView.horizontalToSuperview(insets: .horizontal(30))
+        shortInfoCollectionView.topToBottom(of: contentTitleLabel, offset: 20)
+        shortInfoCollectionView.horizontalToSuperview(insets: .horizontal(30))
         
-        scrollView.topToBottom(of: collectionView, offset: 20)
+        scrollView.topToBottom(of: shortInfoCollectionView, offset: 20)
         scrollView.edgesToSuperview(excluding: .top, insets: .init(top: 0, left: 30, bottom: 10, right: 30))
         scrollView.width(to: scrollContainer)
         
@@ -259,7 +269,14 @@ private extension RocketInfoViewController {
     }
     
     @objc func watchLaunchListButtonDidTap() {
-        navigationController?.pushViewController(LaunchListViewController(launchList: launchList), animated: false)
+        guard let rocketId = rocket.id else { return }
+        navigationController?.pushViewController(LaunchListViewController(launchList: launchList.filter({$0.rocket == rocketId})), animated: false)
+    }
+    
+    @objc func settingsButtonDidTap() {
+        let vc = SettingsViewController()
+        vc.delegate = self
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
@@ -276,13 +293,21 @@ extension RocketInfoViewController: UICollectionViewDataSource {
         else { return UICollectionViewCell()}
         switch title {
         case .height:
-            cell.fill(title: title.title, value: "\(rocket.height?.meters?.description ?? "") м")
+            cell.fill(title: title.title,
+                      value: heightInMetricSystem ? "\(rocket.height?.meters?.description ?? "") м"
+                                                  : "\(rocket.height?.feet?.description ?? "") feet")
         case .diameter:
-            cell.fill(title: title.title, value: "\(rocket.diameter?.meters?.description ?? "") м")
+            cell.fill(title: title.title,
+                      value: diameterInMetricSystem ? "\(rocket.diameter?.meters?.description ?? "") м"
+                                                    : "\(rocket.diameter?.feet?.description ?? "") feet")
         case .mass:
-            cell.fill(title: title.title, value: formatString(rocket.mass?.kg?.description ?? "") + " кг")
+            cell.fill(title: title.title, 
+                      value: massInMetricSystem ? formatString(rocket.mass?.kg?.description ?? "") + " кг"
+                                                : formatString(rocket.mass?.lb?.description ?? "") + " lb")
         case .payloadWeights:
-            cell.fill(title: title.title, value: formatString(rocket.payloadWeights?[0].kg?.description ?? "") + " кг")
+            cell.fill(title: title.title,
+                      value: payloadWeightsInMetricSystem ? formatString(rocket.payloadWeights?[0].kg?.description ?? "") + " кг"
+                                                          : formatString(rocket.payloadWeights?[0].lb?.description ?? "") + " lb")
         }
         return cell
     }
@@ -303,3 +328,21 @@ extension RocketInfoViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+extension RocketInfoViewController: SettingsViewControllerDelegate {
+    func isMetricSystem(_ isMetricSystem: Bool, _ title: String) {
+        Titles.allCases.forEach { titleText in
+            guard titleText.title == title else { return }
+            switch titleText {
+            case .height:
+                heightInMetricSystem = isMetricSystem
+            case .diameter:
+                diameterInMetricSystem = isMetricSystem
+            case .mass:
+                massInMetricSystem = isMetricSystem
+            case .payloadWeights:
+                payloadWeightsInMetricSystem = isMetricSystem
+            }
+        }
+        shortInfoCollectionView.reloadData()
+    }
+}

@@ -52,7 +52,3 @@ extension PageViewController: UIPageViewControllerDataSource {
     }
     
 }
-
-extension PageViewController: UIPageViewControllerDelegate {
-    
-}
