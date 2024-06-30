@@ -1,5 +1,5 @@
 //
-//  PageViewController.swift
+//  RocketInfoPageViewController.swift
 //  SpaceXTestApp
 //
 //  Created by Vladislav Avrutin on 17.06.2024.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class PageViewController: UIPageViewController {
+final class RocketInfoPageViewController: UIPageViewController {
     
     private var arrayRockets: [RocketInfoViewController] = []
     
@@ -30,7 +30,7 @@ final class PageViewController: UIPageViewController {
     }
 }
 
-extension PageViewController: UIPageViewControllerDataSource {
+extension RocketInfoPageViewController: UIPageViewControllerDataSource {
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         guard let vc = viewController as? RocketInfoViewController else { return nil }
         if let index = arrayRockets.firstIndex(of: vc) {

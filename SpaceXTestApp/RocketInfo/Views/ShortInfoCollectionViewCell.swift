@@ -35,6 +35,9 @@ private extension ShortInfoCollectionViewCell {
     func setupUI() {
         let stackView = UIStackView()
         stackView.axis = .vertical
+        stackView.spacing = 5
+        stackView.alignment = .center
+        
         contentView.backgroundColor = .launchListBackground
         contentView.layer.cornerRadius = 15
         
