@@ -13,6 +13,7 @@ final class RocketInfoViewController: UIViewController {
     private let launchesURL = "https://api.spacexdata.com/v4/launches"
     private var launchList: [Launch] = []
     private var rocket: Rocket
+    private var backgroundImages = [BackgroundImageViewController]()
     private var heightInMetricSystem = true
     private var diameterInMetricSystem = true
     private var massInMetricSystem = true
@@ -44,14 +45,23 @@ final class RocketInfoViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadLaunchList()
-        setupUI()
-        configure(model: rocket)
+        downloadImage()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self else { return }
+            self.loadLaunchList()
+            self.setupUI()
+            self.configure(model: self.rocket)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: true)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        containerView.roundCorners(corners: [.topLeft, .topRight], radius: 25)
     }
     
     init(rocket: Rocket) {
@@ -80,6 +90,12 @@ private extension RocketInfoViewController {
         let firstStageCombustionTimeLabel = CustomLabel()
         let secondStageCombustionTimeLabel = CustomLabel()
         let scrollContainer = UIView()
+        let backgroundView = UIView()
+        
+        let backgroundImagePageVC = BackgroundImagePageViewController(images: backgroundImages.reversed(),
+                                                                      transitionStyle: .scroll,
+                                                                      navigationOrientation: .horizontal)
+        addChild(backgroundImagePageVC)
         
         containerView.backgroundColor = .black
         
@@ -128,6 +144,8 @@ private extension RocketInfoViewController {
         shortInfoCollectionView.showsHorizontalScrollIndicator = false
         
         view.addSubview(containerView)
+        view.insertSubview(backgroundView, at: 0)
+        backgroundView.addSubview(backgroundImagePageVC.view)
         containerView.addSubview(contentTitleLabel)
         containerView.addSubview(settingsButton)
         containerView.addSubview(shortInfoCollectionView)
@@ -155,7 +173,10 @@ private extension RocketInfoViewController {
         scrollContainer.addSubview(secondStageCombustionTimeValueLabel)
         scrollContainer.addSubview(viewStartsListButton)
         
-        containerView.edgesToSuperview()
+        containerView.edgesToSuperview(insets: .top(view.frame.height * 0.4))
+        backgroundView.edgesToSuperview(insets: .bottom(view.frame.height * 0.55))
+        backgroundImagePageVC.view.edgesToSuperview()
+        backgroundImagePageVC.didMove(toParent: self)
         contentTitleLabel.topToSuperview(offset: 50)
         contentTitleLabel.leadingToSuperview(offset: 30)
         settingsButton.topToSuperview(offset: 50)
@@ -256,6 +277,19 @@ private extension RocketInfoViewController {
             }
         }
         .resume()
+    }
+    
+    func downloadImage() {
+        rocket.flickrImages?.forEach { imageURL in
+            if let url = URL(string: imageURL) {
+                let task = URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
+                    DispatchQueue.main.async {
+                        self?.backgroundImages.append(BackgroundImageViewController(imageData: data))
+                    }
+                }
+                task.resume()
+            }
+        }
     }
     
     func formatString(_ string: String) -> String {

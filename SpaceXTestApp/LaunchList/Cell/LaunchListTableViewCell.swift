@@ -15,8 +15,7 @@ final class LaunchListTableViewCell: UITableViewCell {
     
     private let title = CustomLabel()
     private let launchDateLabel = CustomLabel()
-//    private let iconImageView = UIImageView()
-    private let successLaunch = CustomLabel()
+    private let successLaunch = UILabel()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -32,8 +31,10 @@ final class LaunchListTableViewCell: UITableViewCell {
         launchDateLabel.text = formateDate(date: model.dateLocal)
         if model.failures.isEmpty {
             successLaunch.text = "success"
+            successLaunch.textColor = .green
         } else {
             successLaunch.text = "failer"
+            successLaunch.textColor = .red
         }
     }
     
@@ -45,6 +46,8 @@ extension LaunchListTableViewCell {
         let containerView = UIView()
         
         contentView.backgroundColor = .black
+        
+        successLaunch.font = .systemFont(ofSize: 18, weight: .medium)
         
         containerView.backgroundColor = .launchListBackground
         containerView.layer.cornerRadius = 10

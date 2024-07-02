@@ -43,14 +43,4 @@ extension BackgroundImageViewController {
         backgroundImageView.edgesToSuperview()
     }
     
-//    func dounloadImage(from url: String) {
-//        guard let url = URL(string: url) else { return }
-//        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-//            guard let data, error == nil else { return }
-//            DispatchQueue.main.async { [weak self] in
-//                self?.backgroundImageView.image = UIImage(data: data)
-//            }
-//        }
-//        task.resume()
-//    }
 }
