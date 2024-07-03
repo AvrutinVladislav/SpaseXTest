@@ -8,10 +8,14 @@
 import UIKit
 import TinyConstraints
 
+protocol RocketInfoViewProtocol: AnyObject {
+   
+}
+
 final class RocketInfoViewController: UIViewController {
     
-    private let launchesURL = "https://api.spacexdata.com/v4/launches"
-    private var launchList: [Launch] = []
+    var presenter: RocketInfoPresenterProtocol?
+    
     private var rocket: Rocket
     private var backgroundImages = [BackgroundImageViewController]()
     private var heightInMetricSystem = true
@@ -48,7 +52,7 @@ final class RocketInfoViewController: UIViewController {
         downloadImage()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self else { return }
-            self.loadLaunchList()
+            presenter?.viewDidLoad()
             self.setupUI()
             self.configure(model: self.rocket)
         }
@@ -72,6 +76,11 @@ final class RocketInfoViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+}
+
+extension RocketInfoViewController: RocketInfoViewProtocol {
+
     
 }
 
@@ -261,24 +270,6 @@ private extension RocketInfoViewController {
         secondStageCombustionTimeValueLabel.text = "\(model.secondStage?.burnTimeSec ?? 0)" + " сек"
     }
     
-    func loadLaunchList() {
-        guard let url = URL(string: launchesURL) else { return }
-        URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
-            guard let data else {
-                print("Error: failure data launch info response")
-                return
-            }
-            DispatchQueue.main.async {
-                do {
-                    self?.launchList = try JSONDecoder().decode([Launch].self, from: data)
-                } catch let error {
-                    print("Error decoding launch info JSON: \(error)")
-                }
-            }
-        }
-        .resume()
-    }
-    
     func downloadImage() {
         rocket.flickrImages?.forEach { imageURL in
             if let url = URL(string: imageURL) {
@@ -304,7 +295,7 @@ private extension RocketInfoViewController {
     
     @objc func watchLaunchListButtonDidTap() {
         guard let rocketId = rocket.id else { return }
-        navigationController?.pushViewController(LaunchListViewController(launchList: launchList.filter({$0.rocket == rocketId})), animated: false)
+        presenter?.viewLaunchList(rocketId: rocketId)
     }
     
     @objc func settingsButtonDidTap() {
