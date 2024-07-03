@@ -11,9 +11,9 @@ final class BackgroundImagePageViewController: UIPageViewController {
     
     private var imagesArray: [BackgroundImageViewController] = []
     
-    init(images: [BackgroundImageViewController], transitionStyle style: UIPageViewController.TransitionStyle, navigationOrientation: UIPageViewController.NavigationOrientation, options: [UIPageViewController.OptionsKey : Any]? = nil) {
+    init(images: [BackgroundImageViewController], transitionStyle style: UIPageViewController.TransitionStyle, navigationOrientation: UIPageViewController.NavigationOrientation) {
         self.imagesArray = images
-        super.init(transitionStyle: style, navigationOrientation: navigationOrientation, options: options)
+        super.init(transitionStyle: style, navigationOrientation: navigationOrientation, options: nil)
     }
     
     required init?(coder: NSCoder) {

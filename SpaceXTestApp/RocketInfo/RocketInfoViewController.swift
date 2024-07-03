@@ -9,7 +9,8 @@ import UIKit
 import TinyConstraints
 
 protocol RocketInfoViewProtocol: AnyObject {
-   
+    var rocketInfo: Rocket { get }
+    func showBackgroundImages(data: [BackgroundImageViewController])
 }
 
 final class RocketInfoViewController: UIViewController {
@@ -24,6 +25,7 @@ final class RocketInfoViewController: UIViewController {
     private var payloadWeightsInMetricSystem = true
     
     private let containerView = UIView()
+    private let backgroundView = UIView()
     private let scrollView = UIScrollView()
     private let contentTitleLabel = UILabel()
     private let settingsButton = UIButton()
@@ -49,7 +51,6 @@ final class RocketInfoViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        downloadImage()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             guard let self else { return }
             presenter?.viewDidLoad()
@@ -81,7 +82,22 @@ final class RocketInfoViewController: UIViewController {
 
 extension RocketInfoViewController: RocketInfoViewProtocol {
 
+    var rocketInfo: Rocket {
+        return rocket
+    }
     
+    func showBackgroundImages(data: [BackgroundImageViewController]) {
+        DispatchQueue.main.async {
+            let backgroundImagePageVC = BackgroundImagePageViewController(images: data,
+                                                                          transitionStyle: .scroll,
+                                                                          navigationOrientation: .horizontal)
+            self.addChild(backgroundImagePageVC)
+            self.backgroundView.addSubview(backgroundImagePageVC.view)
+            self.backgroundView.edgesToSuperview(insets: .bottom(self.view.frame.height * 0.55))
+            backgroundImagePageVC.view.edgesToSuperview()
+            backgroundImagePageVC.didMove(toParent: self)
+        }
+    }
 }
 
 private extension RocketInfoViewController {
@@ -99,12 +115,6 @@ private extension RocketInfoViewController {
         let firstStageCombustionTimeLabel = CustomLabel()
         let secondStageCombustionTimeLabel = CustomLabel()
         let scrollContainer = UIView()
-        let backgroundView = UIView()
-        
-        let backgroundImagePageVC = BackgroundImagePageViewController(images: backgroundImages.reversed(),
-                                                                      transitionStyle: .scroll,
-                                                                      navigationOrientation: .horizontal)
-        addChild(backgroundImagePageVC)
         
         containerView.backgroundColor = .black
         
@@ -154,7 +164,6 @@ private extension RocketInfoViewController {
         
         view.addSubview(containerView)
         view.insertSubview(backgroundView, at: 0)
-        backgroundView.addSubview(backgroundImagePageVC.view)
         containerView.addSubview(contentTitleLabel)
         containerView.addSubview(settingsButton)
         containerView.addSubview(shortInfoCollectionView)
@@ -183,9 +192,6 @@ private extension RocketInfoViewController {
         scrollContainer.addSubview(viewStartsListButton)
         
         containerView.edgesToSuperview(insets: .top(view.frame.height * 0.4))
-        backgroundView.edgesToSuperview(insets: .bottom(view.frame.height * 0.55))
-        backgroundImagePageVC.view.edgesToSuperview()
-        backgroundImagePageVC.didMove(toParent: self)
         contentTitleLabel.topToSuperview(offset: 50)
         contentTitleLabel.leadingToSuperview(offset: 30)
         settingsButton.topToSuperview(offset: 50)
@@ -270,19 +276,6 @@ private extension RocketInfoViewController {
         secondStageCombustionTimeValueLabel.text = "\(model.secondStage?.burnTimeSec ?? 0)" + " сек"
     }
     
-    func downloadImage() {
-        rocket.flickrImages?.forEach { imageURL in
-            if let url = URL(string: imageURL) {
-                let task = URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
-                    DispatchQueue.main.async {
-                        self?.backgroundImages.append(BackgroundImageViewController(imageData: data))
-                    }
-                }
-                task.resume()
-            }
-        }
-    }
-    
     func formatString(_ string: String) -> String {
         let pattern = "(\\d)(?=(\\d{3})+(?!\\d))"
         if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
@@ -299,9 +292,7 @@ private extension RocketInfoViewController {
     }
     
     @objc func settingsButtonDidTap() {
-        let vc = SettingsViewController()
-        vc.delegate = self
-        navigationController?.pushViewController(vc, animated: true)
+        presenter?.settingsButtonDidTap()
     }
 }
 

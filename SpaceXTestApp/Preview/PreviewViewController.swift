@@ -8,59 +8,53 @@
 import UIKit
 import TinyConstraints
 
+protocol PreviewViewProtocol: AnyObject {
+    func prepareRocketData(data: [Rocket]?) -> [RocketInfoViewController]
+    func showRocketInfo(data: [RocketInfoViewController])
+}
+
 final class PreviewViewController: UIViewController {
     
-    private var rocketsURL = "https://api.spacexdata.com/v4/rockets"
+    //MARK: - Public properties
+    
+    var presenter: PreviewPresenterProtocol?
+    
+    //MARK: - Private properties
     
     private var rockets: [Rocket] = []
-    private var rocketsInfo = [RocketInfoViewController]()
-    private let shortInfoPageViewContainer = UIView()
+    
+    //MARK: - LifeCycler
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadRocketInfo()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.setupUI()
-        }
+        presenter?.viewDidLoad()
     }
 
 }
 
-extension PreviewViewController {
+extension PreviewViewController: PreviewViewProtocol {
     
-    func setupUI() {
-        
-        let rocketInfoPageVC = RocketInfoPageViewController(rockets: rocketsInfo,
+    func prepareRocketData(data: [Rocket]?) -> [RocketInfoViewController] {
+        var rocketsInfo = [RocketInfoViewController]()
+        guard let data else { return [] }
+        data.forEach { rocket in
+            rocketsInfo.append(RocketInfoModuleBuilder.build(rockets: rocket))
+        }
+        return rocketsInfo
+    }
+    
+    func showRocketInfo(data: [RocketInfoViewController]) {
+        let shortInfoPageViewContainer = UIView()
+        let rocketInfoPageVC = RocketInfoPageViewController(rockets: data,
                                                             transitionStyle: .scroll,
                                                             navigationOrientation: .horizontal)
-        addChild(rocketInfoPageVC)
+        self.addChild(rocketInfoPageVC)
         
-        view.addSubview(shortInfoPageViewContainer)
+        self.view.addSubview(shortInfoPageViewContainer)
         shortInfoPageViewContainer.addSubview(rocketInfoPageVC.view)
         shortInfoPageViewContainer.edgesToSuperview()
         rocketInfoPageVC.view.edgesToSuperview()
         rocketInfoPageVC.didMove(toParent: self)
-    }
-    
-    func loadRocketInfo() {
-        guard let url = URL(string: rocketsURL) else { return }
-        URLSession.shared.dataTask(with: url) {[weak self] data, response, error in
-            guard let data else {
-                print("Error: failure data from rockets info response")
-                return
-            }
-            DispatchQueue.main.async {
-                do {
-                    self?.rockets = try JSONDecoder().decode([Rocket].self, from: data)
-                    self?.rockets.forEach { rocket in
-                        self?.rocketsInfo.append(RocketInfoViewController(rocket: rocket))
-                    }
-                } catch let error {
-                    print("Error decoding rockets info JSON: \(error)")
-                }
-            }
-        }
-        .resume()
     }
     
 }

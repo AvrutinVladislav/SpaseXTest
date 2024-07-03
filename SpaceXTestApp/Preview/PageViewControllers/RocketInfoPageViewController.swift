@@ -11,9 +11,9 @@ final class RocketInfoPageViewController: UIPageViewController {
     
     private var arrayRockets: [RocketInfoViewController] = []
     
-    init(rockets: [RocketInfoViewController], transitionStyle style: UIPageViewController.TransitionStyle, navigationOrientation: UIPageViewController.NavigationOrientation, options: [UIPageViewController.OptionsKey : Any]? = nil) {
+    init(rockets: [RocketInfoViewController], transitionStyle style: UIPageViewController.TransitionStyle, navigationOrientation: UIPageViewController.NavigationOrientation) {
         self.arrayRockets = rockets
-        super.init(transitionStyle: style, navigationOrientation: navigationOrientation, options: options)
+        super.init(transitionStyle: style, navigationOrientation: navigationOrientation, options: nil)
     }
     
     required init?(coder: NSCoder) {

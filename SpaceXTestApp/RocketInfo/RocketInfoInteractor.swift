@@ -7,7 +7,8 @@
 
 protocol RocketInfoInteractorProtocol: AnyObject {
     var launchList: [Launch] { get }
-    func loadLunchList() 
+    func loadLunchList()
+    func loadBackgroundImages(rocket: Rocket?)
 }
 
 class RocketInfoInteractor: RocketInfoInteractorProtocol {
@@ -19,6 +20,13 @@ class RocketInfoInteractor: RocketInfoInteractorProtocol {
     func loadLunchList() {
         rocketInfoService.loadLaunchList { [weak self] launchList in
             self?.launchList = launchList
+        }
+    }
+    
+    func loadBackgroundImages(rocket: Rocket?) {
+        guard let rocket else { return }
+        rocketInfoService.downloadImage(rocket: rocket) { [weak self] backgroundImageVC in
+            self?.presenter?.showBackgroundImages(data: backgroundImageVC)
         }
     }
 }

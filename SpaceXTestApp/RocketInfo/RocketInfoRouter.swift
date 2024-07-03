@@ -22,7 +22,7 @@ class RocketInfoRouter: RocketInfoRouterProtocol {
     
     func settingsButtonDidTap() {
         let vc = SettingsModuleBuilder.build()
-        vc.delegate = self
+        vc.delegate = viewController.self
         viewController?.navigationController?.pushViewController(vc, animated: true)
     }
 }

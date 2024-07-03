@@ -15,6 +15,7 @@ protocol SettingsViewControllerDelegate: AnyObject {
 
 final class SettingsViewController: CustomViewController {
     
+    var presenter: SettingsPresenterProtocol?
     weak var delegate: SettingsViewControllerDelegate?
     private let tableView = UITableView()
     
@@ -25,7 +26,10 @@ final class SettingsViewController: CustomViewController {
     }
 }
 
-extension SettingsViewController {
+extension SettingsViewController: SettingsViewControllerDelegate {
+    
+    func isMetricSystem(_ isMetricSystem: Bool, _ title: String){}
+    
     func setupUI() {
         view.backgroundColor = .black
         tableView.backgroundColor = .black

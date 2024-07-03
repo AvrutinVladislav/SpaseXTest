@@ -9,7 +9,13 @@ import Foundation
 import UIKit
 import TinyConstraints
 
+protocol LaunchListViewProtocol: AnyObject {
+    
+}
+
 final class LaunchListViewController: CustomViewController {
+    
+    var presenter: LaunchListPresenterProtocol?
     
     private let tableView = UITableView()
     private var launchList: [Launch] = []
@@ -29,6 +35,10 @@ final class LaunchListViewController: CustomViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+}
+
+extension LaunchListViewController: LaunchListViewProtocol {
     
 }
 
@@ -66,7 +76,7 @@ extension LaunchListViewController {
     }
     
     @objc func onBackButtonDidTap() {
-        navigationController?.popViewController(animated: true)
+        presenter?.backButtonDidTap()
     }
 }
 

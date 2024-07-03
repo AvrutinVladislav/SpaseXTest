@@ -8,6 +8,8 @@
 protocol RocketInfoPresenterProtocol: AnyObject {
     func viewDidLoad()
     func viewLaunchList(rocketId: String)
+    func settingsButtonDidTap()
+    func showBackgroundImages(data: [BackgroundImageViewController])
 }
 
 class RocketInfoPresenter {
@@ -24,9 +26,19 @@ class RocketInfoPresenter {
 extension RocketInfoPresenter: RocketInfoPresenterProtocol {
     func viewDidLoad() {
         interactor.loadLunchList()
+        interactor.loadBackgroundImages(rocket: view?.rocketInfo)
     }
+    
     func viewLaunchList(rocketId: String) {
         let launches = interactor.launchList.filter({$0.rocket == rocketId})
         router.openLaunchList(for: launches)
+    }
+    
+    func settingsButtonDidTap() {
+        router.settingsButtonDidTap()
+    }
+    
+    func showBackgroundImages(data: [BackgroundImageViewController]) {
+        view?.showBackgroundImages(data: data)
     }
 }
